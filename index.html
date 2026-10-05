@@ -1005,24 +1005,21 @@ function checkPlayer(raw) {
   */
 
   const params =
-    new URLSearchParams({
+  new URLSearchParams({
 
-      action:
-        "checkin",
+    action:
+      "checkin",
 
-      code:
-        code,
+    code:
+      code,
 
-      device:
-        "External QR Scanner",
+    device:
+      "External QR Scanner",
 
-      key:
-        SCANNER_KEY,
+    callback:
+      callbackName
 
-      callback:
-        callbackName
-
-    });
+  });
 
 
   script.src =
