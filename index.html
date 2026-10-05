@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Olivarez Golf Cup 2026 — QR Attendance</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#f3f6fa;font-family:Arial,sans-serif;color:#17365d;padding:16px}
+.wrap{max-width:540px;margin:auto}.card{background:white;border-radius:18px;padding:20px;box-shadow:0 5px 20px #0002}
+h1{text-align:center;font-size:22px;margin:4px 0} h2{text-align:center;font-size:14px;margin:6px 0 20px}
+#reader{width:100%;overflow:hidden;border-radius:14px}
+button,input,select{width:100%;padding:14px;margin-top:10px;border-radius:11px;font-size:16px}
+button{border:0;font-weight:700;cursor:pointer}.primary{background:#17365d;color:white}.secondary{background:#e8eef6;color:#17365d}.stop{background:#8d2020;color:white}
+input,select{border:1px solid #bbb;background:white}.controls{display:none}
+.result{display:none;margin-top:14px;padding:16px;border-radius:12px;text-align:center;line-height:1.5}
+.info{display:block;background:#e7eff8}.success{display:block;background:#dff3e4;color:#176b2c}.duplicate{display:block;background:#fff3cd;color:#725000}.error{display:block;background:#fde5e5;color:#9b0000}
+.name{font-size:24px;font-weight:700;margin:8px}.manual{border-top:1px solid #ddd;margin-top:18px;padding-top:16px}
+.small{font-size:13px;line-height:1.5;color:#667}.debug{font-size:11px;color:#777;word-break:break-word;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<h1>THE OLIVAREZ GOLF CUP 2026</h1>
+<h2>QR ATTENDANCE SCANNER</h2>
+<div id="reader"></div>
+<button id="startBtn" class="primary" onclick="startCamera()">📷 START CAMERA</button>
+<div id="controls" class="controls">
+<select id="cameraSelect" onchange="chooseCamera(this.value)"></select>
+<button class="secondary" onclick="searchCameras()">🔍 SEARCH CAMERAS</button>
+<button id="switchBtn" class="secondary" onclick="switchCamera()">🔄 SWITCH CAMERA</button>
+<button class="stop" onclick="stopCamera()">■ STOP CAMERA</button>
+</div>
+<div id="result" class="result"></div>
+<div id="debug" class="debug"></div>
+<div class="manual">
+<b>Backup Check-In</b>
+<div class="small">Enter the Player ID if camera scanning is unavailable.</div>
+<input id="manualCode" placeholder="OGC2026-0001" onkeydown="if(event.key==='Enter')manualCheckIn()">
+<button class="secondary" onclick="manualCheckIn()">CHECK IN PLAYER</button>
+</div>
+</div></div>
+
+<script>
+// ============================================================
+// SETUP
+// API_URL is already configured for your Apps Script deployment.
+// Replace ONLY the SCANNER_KEY value below with the exact
+// scannerKey you placed in Code.gs.
+// ============================================================
+const API_URL = "https://script.google.com/macros/s/AKfycbzRt0cS1lIGu6Gn08EpJmj8DEyk6B9QShGlrM3WZBF1DHhju1kYOK0HUpFYidSVxo4U/exec";
+const SCANNER_KEY = "OGC2026-rcpsagolfcupadmin";
+// ============================================================
+
+let qr=null,cameras=[],current=0,busy=false,lastCode="",lastTime=0;
+
+function setResult(cls,html){const r=document.getElementById("result");r.className="result "+cls;r.innerHTML=html;r.style.display="block"}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+async function startCamera(){
+ document.getElementById("debug").textContent="";
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){return cameraError(new Error("Camera API is not supported by this browser."))}
+ try{
+   setResult("info","Requesting camera permission...");
+   const s=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+   s.getTracks().forEach(t=>t.stop());
+   await searchCameras(false);
+   if(!cameras.length)throw new Error("No camera detected.");
+   const rear=cameras.findIndex(c=>/back|rear|environment|world/i.test(c.label||""));
+   current=rear>=0?rear:(cameras.length>1?cameras.length-1:0);
+   fillCameraList();
+   await openCamera();
+ }catch(e){cameraError(e)}
+}
+
+async function searchCameras(open=true){
+ try{
+   cameras=(await Html5Qrcode.getCameras())||[];
+   fillCameraList();
+   if(!cameras.length)throw new Error("No camera detected.");
+   if(open){current=Math.min(current,cameras.length-1);await openCamera()}
+ }catch(e){cameraError(e)}
+}
+
+function fillCameraList(){
+ const s=document.getElementById("cameraSelect");s.innerHTML="";
+ cameras.forEach((c,i)=>{const o=document.createElement("option");o.value=i;o.textContent=c.label||("Camera "+(i+1));o.selected=i===current;s.appendChild(o)});
+ document.getElementById("controls").style.display=cameras.length?"block":"none";
+ document.getElementById("switchBtn").style.display=cameras.length>1?"block":"none";
+}
+
+async function openCamera(){
+ try{
+   if(qr){try{if(qr.isScanning)await qr.stop()}catch(e){} try{qr.clear()}catch(e){}}
+   qr=new Html5Qrcode("reader");
+   const cam=cameras[current]; if(!cam)throw new Error("Selected camera is unavailable.");
+   setResult("info","Opening "+esc(cam.label||"camera")+"...");
+   await qr.start(cam.id,{fps:12,qrbox:(w,h)=>{const x=Math.floor(Math.min(w,h)*.7);return{width:x,height:x}},aspectRatio:1},
+     text=>checkPlayer(text),()=>{});
+   document.getElementById("startBtn").style.display="none";
+   document.getElementById("controls").style.display="block";
+   setResult("info","Camera ready — scan a player QR code.");
+ }catch(e){cameraError(e)}
+}
+
+async function chooseCamera(i){current=Number(i);await openCamera()}
+async function switchCamera(){if(cameras.length<2)return;current=(current+1)%cameras.length;fillCameraList();await openCamera()}
+async function stopCamera(){try{if(qr&&qr.isScanning)await qr.stop();if(qr)qr.clear()}catch(e){}document.getElementById("startBtn").style.display="block";document.getElementById("controls").style.display="none";setResult("info","Camera stopped.")}
+
+function manualCheckIn(){const e=document.getElementById("manualCode"),v=e.value.trim();if(!v)return setResult("error","<b>Enter a Player ID.</b>");e.value="";checkPlayer(v)}
+
+function checkPlayer(raw){
+ const code=String(raw||"").trim().toUpperCase();if(!code)return;
+ const now=Date.now();if(busy||(code===lastCode&&now-lastTime<3500))return;
+ if(SCANNER_KEY==="OGC2026-rcpsagolfcupadmin"||!SCANNER_KEY)return setResult("error","<b>SETUP REQUIRED</b><br>Paste your scannerKey into SCANNER_KEY in index.html.");
+ busy=true;lastCode=code;lastTime=now;if(navigator.vibrate)navigator.vibrate(80);
+ setResult("info","Checking "+esc(code)+"...");
+ const cb="ogc_"+Date.now()+"_"+Math.floor(Math.random()*100000);
+ const tag=document.createElement("script");
+ let timer=setTimeout(()=>finishError("Attendance server did not respond."),15000);
+ function cleanup(){clearTimeout(timer);try{delete window[cb]}catch(e){}if(tag.parentNode)tag.remove()}
+ function finishError(m){cleanup();busy=false;setResult("error","<b>CONNECTION ERROR</b><br>"+esc(m))}
+ window[cb]=data=>{cleanup();displayResult(data||{ok:false,message:"Invalid server response."})};
+ tag.onerror=()=>finishError("Could not connect to the Apps Script attendance server.");
+ const p=new URLSearchParams({action:"checkin",code:code,device:"External QR Scanner",key:SCANNER_KEY,callback:cb});
+ tag.src=API_URL+"?"+p.toString();document.body.appendChild(tag);
+}
+
+function displayResult(d){
+ if(d.ok){
+   setResult("success","<b>✅ "+esc(d.message)+"</b><div class='name'>"+esc(d.name)+"</div>"+esc(d.id)+"<br>"+esc(d.type||"")+(d.sponsor?"<br>"+esc(d.sponsor):"")+"<br><b>PAYMENT: "+esc(d.payment||"")+"</b><br>Check-in: "+esc(d.time||""));
+ }else if(d.status==="duplicate"){
+   setResult("duplicate","<b>⚠️ "+esc(d.message)+"</b><div class='name'>"+esc(d.name)+"</div>"+esc(d.id)+"<br>First check-in: "+esc(d.firstCheckIn||""));
+ }else{
+   setResult("error","<b>❌ "+esc(d.message||"CHECK-IN FAILED")+"</b><br>"+esc(d.id||""));
+ }
+ setTimeout(()=>{busy=false},2500);
+}
+
+function cameraError(e){
+ const n=e?.name||"",m=e?.message||String(e);let help="Press START CAMERA again or use manual check-in.";
+ if(n==="NotAllowedError"||/permission|denied/i.test(m))help="Camera permission was denied for this website. Allow camera access in the browser and try again.";
+ else if(n==="NotFoundError")help="No camera was found.";
+ else if(n==="NotReadableError")help="Another app may be using the camera. Close it and try again.";
+ setResult("error","<b>CAMERA ERROR</b><br>"+esc(help));document.getElementById("debug").textContent="Browser error: "+n+" — "+m;document.getElementById("startBtn").style.display="block";
+}
+</script>
+</body>
+</html>
