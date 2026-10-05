@@ -112,7 +112,6 @@ function manualCheckIn(){const e=document.getElementById("manualCode"),v=e.value
 function checkPlayer(raw){
  const code=String(raw||"").trim().toUpperCase();if(!code)return;
  const now=Date.now();if(busy||(code===lastCode&&now-lastTime<3500))return;
- if(SCANNER_KEY==="OGC2026-rcpsagolfcupadmin"||!SCANNER_KEY)return setResult("error","<b>SETUP REQUIRED</b><br>Paste your scannerKey into SCANNER_KEY in index.html.");
  busy=true;lastCode=code;lastTime=now;if(navigator.vibrate)navigator.vibrate(80);
  setResult("info","Checking "+esc(code)+"...");
  const cb="ogc_"+Date.now()+"_"+Math.floor(Math.random()*100000);
