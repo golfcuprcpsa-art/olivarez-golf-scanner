@@ -3,1269 +3,228 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-
 <title>Olivarez Golf Cup 2026 — QR Attendance</title>
-
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
 <style>
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box} body{margin:0;background:#f3f6fa;font-family:Arial,sans-serif;color:#17365d;padding:16px}
+.wrap{max-width:540px;margin:auto}.card{background:white;border-radius:18px;padding:20px;box-shadow:0 5px 20px #0002}
+h1{text-align:center;font-size:22px;margin:4px 0} h2{text-align:center;font-size:14px;margin:6px 0 20px}
+#reader{width:100%;overflow:hidden;border-radius:14px}
+button,input,select{width:100%;padding:14px;margin-top:10px;border-radius:11px;font-size:16px}
+button{border:0;font-weight:700;cursor:pointer}.primary{background:#17365d;color:white}.secondary{background:#e8eef6;color:#17365d}.stop{background:#8d2020;color:white}
+input,select{border:1px solid #bbb;background:white}.controls{display:none}
+.result{display:none;margin:10px 0 12px;padding:16px;border-radius:12px;text-align:center;line-height:1.5;position:sticky;top:8px;z-index:50;box-shadow:0 4px 14px #0002}
+.info{display:block;background:#e7eff8}.success{display:block;background:#dff3e4;color:#176b2c}.duplicate{display:block;background:#fff3cd;color:#725000}.error{display:block;background:#fde5e5;color:#9b0000}
+.name{font-size:24px;font-weight:700;margin:8px}.manual{border-top:1px solid #ddd;margin-top:18px;padding-top:16px}
+.small{font-size:13px;line-height:1.5;color:#667}.debug{font-size:11px;color:#777;word-break:break-word;margin-top:8px}
+
+@media(max-width:600px){
+  body{padding:8px}
+  .card{padding:14px;border-radius:16px}
+  h1{font-size:20px}
+  #reader{max-height:48vh}
+  #reader video{max-height:48vh!important;object-fit:cover!important}
+  .result{font-size:16px}
+  .name{font-size:25px}
 }
 
-body {
-  margin: 0;
-  background: #f3f6fa;
-  font-family: Arial, sans-serif;
-  color: #17365d;
-  padding: 16px;
+.compact-controls{gap:8px;margin-top:8px}
+.compact-controls button{width:auto;flex:1;margin-top:0;padding:11px}
+.payment-stop{font-size:24px;font-weight:900;margin:8px 0}
+.payment-instruction{font-size:17px;font-weight:700}
+@media(max-width:600px){
+  .compact-controls{display:none}
+  .compact-controls[style*="block"]{display:flex!important}
+  .manual{margin-top:12px;padding-top:12px}
 }
 
-.wrap {
-  max-width: 540px;
-  margin: auto;
-}
-
-.card {
-  background: white;
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: 0 5px 20px #0002;
-}
-
-h1 {
-  text-align: center;
-  font-size: 22px;
-  margin: 4px 0;
-}
-
-h2 {
-  text-align: center;
-  font-size: 14px;
-  margin: 6px 0 20px;
-}
-
-#reader {
-  width: 100%;
-  overflow: hidden;
-  border-radius: 14px;
-}
-
-button,
-input,
-select {
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  border-radius: 11px;
-  font-size: 16px;
-}
-
-button {
-  border: 0;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primary {
-  background: #17365d;
-  color: white;
-}
-
-.secondary {
-  background: #e8eef6;
-  color: #17365d;
-}
-
-.stop {
-  background: #8d2020;
-  color: white;
-}
-
-input,
-select {
-  border: 1px solid #bbb;
-  background: white;
-}
-
-.controls {
-  display: none;
-}
-
-.result {
-  display: none;
-  margin-top: 14px;
-  padding: 16px;
-  border-radius: 12px;
-  text-align: center;
-  line-height: 1.5;
-}
-
-.info {
-  display: block;
-  background: #e7eff8;
-}
-
-.success {
-  display: block;
-  background: #dff3e4;
-  color: #176b2c;
-}
-
-.duplicate {
-  display: block;
-  background: #fff3cd;
-  color: #725000;
-}
-
-.error {
-  display: block;
-  background: #fde5e5;
-  color: #9b0000;
-}
-
-.name {
-  font-size: 24px;
-  font-weight: 700;
-  margin: 8px;
-}
-
-.manual {
-  border-top: 1px solid #ddd;
-  margin-top: 18px;
-  padding-top: 16px;
-}
-
-.small {
-  font-size: 13px;
-  line-height: 1.5;
-  color: #667;
-}
-
-.debug {
-  font-size: 11px;
-  color: #777;
-  word-break: break-word;
-  margin-top: 8px;
+/* MOBILE-ONLY LAYOUT OPTIMIZATION — scanning logic unchanged */
+@media (max-width:600px){
+  body{padding:5px}
+  .wrap{max-width:100%}
+  .card{padding:10px;border-radius:12px}
+  h1{font-size:17px;line-height:1.15;margin:2px 0}
+  h2{font-size:11px;margin:3px 0 7px}
+  .result{padding:9px 10px;margin:5px 0 7px;line-height:1.25;
+          border-radius:10px;top:4px;font-size:14px}
+  .result .name{font-size:21px;margin:3px 0}
+  .result .payment{font-size:18px;margin:4px 0}
+  .result .payment-stop{font-size:19px;margin:3px 0}
+  .result .payment-instruction{font-size:14px}
+  #nextBtn{padding:13px 8px;margin:5px 0 7px;font-size:17px;
+           position:sticky;top:4px;z-index:51}
+  #reader{max-height:36vh;border-radius:10px}
+  #reader video{max-height:36vh!important;object-fit:contain!important}
+  button,input{font-size:14px;padding:10px;margin-top:6px}
+  .compact-controls{display:none;gap:6px;margin-top:6px}
+  .compact-controls[style*="block"],.compact-controls[style*="flex"]{display:flex!important}
+  .compact-controls button{min-width:0;flex:1;padding:9px 5px;font-size:12px;
+                            white-space:nowrap}
+  .manual{margin-top:8px;padding-top:8px}
+  .manual .small{font-size:11px}
+  .debug{margin-top:4px}
 }
 </style>
 </head>
-
 <body>
-
-<div class="wrap">
-<div class="card">
-
+<div class="wrap"><div class="card">
 <h1>THE OLIVAREZ GOLF CUP 2026</h1>
 <h2>QR ATTENDANCE SCANNER</h2>
 
-<div id="reader"></div>
-
-<button
-  id="startBtn"
-  class="primary"
-  onclick="startCamera()">
-  📷 START CAMERA
-</button>
-
-<div id="controls" class="controls">
-
-<select
-  id="cameraSelect"
-  onchange="chooseCamera(this.value)">
-</select>
-
-<button
-  class="secondary"
-  onclick="searchCameras()">
-  🔍 SEARCH CAMERAS
-</button>
-
-<button
-  id="switchBtn"
-  class="secondary"
-  onclick="switchCamera()">
-  🔄 SWITCH CAMERA
-</button>
-
-<button
-  class="stop"
-  onclick="stopCamera()">
-  ■ STOP CAMERA
-</button>
-
-</div>
-
 <div id="result" class="result"></div>
-
 <div id="debug" class="debug"></div>
-
+<button id="nextBtn" class="primary" style="display:none;background:#176b2c" onclick="scanNextPlayer()">▶ SCAN NEXT PLAYER</button>
+<div id="reader"></div>
+<button id="startBtn" class="primary" onclick="startCamera()">📷 START CAMERA</button>
+<div id="controls" class="controls compact-controls">
+<button id="switchBtn" class="secondary" onclick="switchCamera()">🔄 SWITCH CAMERA</button>
+<button class="stop" onclick="stopCamera()">■ STOP CAMERA</button>
+</div>
 <div class="manual">
-
 <b>Backup Check-In</b>
-
-<div class="small">
-Enter the Player ID if camera scanning is unavailable.
+<div class="small">Enter the Player ID if camera scanning is unavailable.</div>
+<input id="manualCode" placeholder="OGC2026-0001" onkeydown="if(event.key==='Enter')manualCheckIn()">
+<button class="secondary" onclick="manualCheckIn()">CHECK IN PLAYER</button>
 </div>
-
-<input
-  id="manualCode"
-  placeholder="OGC2026-0001"
-  autocomplete="off"
-  onkeydown="if(event.key==='Enter')manualCheckIn()">
-
-<button
-  class="secondary"
-  onclick="manualCheckIn()">
-  CHECK IN PLAYER
-</button>
-
-</div>
-
-</div>
-</div>
-
+</div></div>
 
 <script>
+// ============================================================
+// SETUP
+// API_URL is already configured for your Apps Script deployment.
+// Replace ONLY the SCANNER_KEY value below with the exact
+// scannerKey you placed in Code.gs.
+// ============================================================
+const API_URL = "https://script.google.com/macros/s/AKfycbyryNn2izH_oy4FjW3oKpN_VSnwp4EKd3fM0JWltR_qkBYyhU6GozXoUPMQZVoJrog-/exec";
+// ============================================================
 
-/* =========================================================
-   OLIVAREZ GOLF CUP 2026
-   SCANNER CONFIGURATION
-   ========================================================= */
+let qr=null,cameras=[],current=0,busy=false,lastCode="",lastTime=0;
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycbyryNn2izH_oy4FjW3oKpN_VSnwp4EKd3fM0JWltR_qkBYyhU6GozXoUPMQZVoJrog-/exec";
-
-/*
-IMPORTANT:
-
-Put the SAME scannerKey that is in Code.gs below.
-
-Because your previous key was exposed, create a NEW key
-in Code.gs and put that new key here too.
-*/
-
-const SCANNER_KEY =
-"OGC2026-rcpsaadmin";
+function setResult(cls,html){const r=document.getElementById("result");r.className="result "+cls;r.innerHTML=html;r.style.display="block"}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function tone(ok){try{const A=window.AudioContext||window.webkitAudioContext,c=new A(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=ok?880:240;g.gain.setValueAtTime(.1,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.start();o.stop(c.currentTime+.18)}catch(e){}}
 
 
-/* =========================================================
-   VARIABLES
-   ========================================================= */
-
-let qr = null;
-
-let cameras = [];
-
-let current = 0;
-
-let busy = false;
-
-let lastCode = "";
-
-let lastTime = 0;
-
-
-/* =========================================================
-   DISPLAY MESSAGE
-   ========================================================= */
-
-function setResult(cls, html) {
-
-  const r =
-    document.getElementById("result");
-
-  r.className =
-    "result " + cls;
-
-  r.innerHTML =
-    html;
-
-  r.style.display =
-    "block";
+async function startCamera(){
+ document.getElementById("debug").textContent="";
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){return cameraError(new Error("Camera API is not supported by this browser."))}
+ try{
+   setResult("info","Requesting camera permission...");
+   const s=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+   s.getTracks().forEach(t=>t.stop());
+   await searchCameras(false);
+   if(!cameras.length)throw new Error("No camera detected.");
+   const rear=cameras.findIndex(c=>/back|rear|environment|world/i.test(c.label||""));
+   current=rear>=0?rear:(cameras.length>1?cameras.length-1:0);
+   fillCameraList();
+   await openCamera();
+ }catch(e){cameraError(e)}
 }
 
-
-/* =========================================================
-   ESCAPE HTML
-   ========================================================= */
-
-function esc(v) {
-
-  return String(v ?? "")
-    .replace(
-      /[&<>"']/g,
-      c => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      })[c]
-    );
+async function searchCameras(open=true){
+ try{
+   cameras=(await Html5Qrcode.getCameras())||[];
+   fillCameraList();
+   if(!cameras.length)throw new Error("No camera detected.");
+   if(open){current=Math.min(current,cameras.length-1);await openCamera()}
+ }catch(e){cameraError(e)}
 }
 
-
-/* =========================================================
-   START CAMERA
-   ========================================================= */
-
-async function startCamera() {
-
-  document
-    .getElementById("debug")
-    .textContent = "";
-
-  if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
-  ) {
-
-    cameraError(
-      new Error(
-        "Camera API is not supported by this browser."
-      )
-    );
-
-    return;
-  }
-
-  try {
-
-    setResult(
-      "info",
-      "Requesting camera permission..."
-    );
-
-
-    /*
-    Request permission first.
-    */
-
-    const stream =
-      await navigator.mediaDevices
-        .getUserMedia({
-          video: true,
-          audio: false
-        });
-
-
-    /*
-    Stop temporary permission stream.
-    */
-
-    stream
-      .getTracks()
-      .forEach(track =>
-        track.stop()
-      );
-
-
-    /*
-    Search cameras.
-    */
-
-    await searchCameras(false);
-
-
-    if (!cameras.length) {
-
-      throw new Error(
-        "No camera detected."
-      );
-
-    }
-
-
-    /*
-    Prefer rear/back camera.
-    */
-
-    const rear =
-      cameras.findIndex(
-        c =>
-          /back|rear|environment|world/i
-            .test(c.label || "")
-      );
-
-
-    current =
-      rear >= 0
-        ? rear
-        : (
-            cameras.length > 1
-              ? cameras.length - 1
-              : 0
-          );
-
-
-    fillCameraList();
-
-    await openCamera();
-
-  }
-
-  catch (e) {
-
-    cameraError(e);
-
-  }
+function fillCameraList(){
+  document.getElementById("controls").style.display=cameras.length?"flex":"none";
+  document.getElementById("switchBtn").style.display=cameras.length>1?"block":"none";
 }
 
-
-/* =========================================================
-   SEARCH CAMERAS
-   ========================================================= */
-
-async function searchCameras(
-  openCameraAfter = true
-) {
-
-  try {
-
-    cameras =
-      (
-        await Html5Qrcode
-          .getCameras()
-      ) || [];
-
-
-    fillCameraList();
-
-
-    if (!cameras.length) {
-
-      throw new Error(
-        "No camera detected."
-      );
-
-    }
-
-
-    if (openCameraAfter) {
-
-      current =
-        Math.min(
-          current,
-          cameras.length - 1
-        );
-
-      await openCamera();
-
-    }
-
-  }
-
-  catch (e) {
-
-    cameraError(e);
-
-  }
+async function openCamera(){
+ try{
+   document.getElementById("nextBtn").style.display="none";
+   if(qr){try{if(qr.isScanning)await qr.stop()}catch(e){} try{qr.clear()}catch(e){}}
+   qr=new Html5Qrcode("reader");
+   const cam=cameras[current]; if(!cam)throw new Error("Selected camera is unavailable.");
+   setResult("info","Opening "+esc(cam.label||"camera")+"...");
+   await qr.start(cam.id,{fps:12,qrbox:(w,h)=>{const x=Math.floor(Math.min(w,h)*.7);return{width:x,height:x}},aspectRatio:1},
+     text=>checkPlayer(text,true),()=>{});
+   document.getElementById("startBtn").style.display="none";
+   document.getElementById("controls").style.display="block";
+   setResult("info","Camera ready — scan a player QR code.");
+ }catch(e){cameraError(e)}
 }
 
+async function switchCamera(){if(cameras.length<2)return;current=(current+1)%cameras.length;fillCameraList();await openCamera()}
+async function stopCamera(){document.getElementById("nextBtn").style.display="none";try{if(qr&&qr.isScanning)await qr.stop();if(qr)qr.clear()}catch(e){}document.getElementById("startBtn").style.display="block";document.getElementById("controls").style.display="none";setResult("info","Camera stopped.")}
 
-/* =========================================================
-   CAMERA DROPDOWN
-   ========================================================= */
+function manualCheckIn(){const e=document.getElementById("manualCode"),v=e.value.trim();if(!v)return setResult("error","<b>Enter a Player ID.</b>");e.value="";checkPlayer(v,false)}
 
-function fillCameraList() {
-
-  const select =
-    document.getElementById(
-      "cameraSelect"
-    );
-
-
-  select.innerHTML = "";
-
-
-  cameras.forEach(
-    (camera, index) => {
-
-      const option =
-        document.createElement(
-          "option"
-        );
-
-
-      option.value =
-        index;
-
-
-      option.textContent =
-        camera.label ||
-        (
-          "Camera " +
-          (index + 1)
-        );
-
-
-      option.selected =
-        index === current;
-
-
-      select.appendChild(
-        option
-      );
-
-    }
-  );
-
-
-  document
-    .getElementById(
-      "controls"
-    )
-    .style.display =
-      cameras.length
-        ? "block"
-        : "none";
-
-
-  document
-    .getElementById(
-      "switchBtn"
-    )
-    .style.display =
-      cameras.length > 1
-        ? "block"
-        : "none";
+function checkPlayer(raw,fromQr=false){
+ const code=String(raw||"").trim().toUpperCase();if(!code)return;
+ const now=Date.now();if(busy||(code===lastCode&&now-lastTime<3500))return;
+ busy=true;lastCode=code;lastTime=now;
+ if(fromQr){
+   
+   try{if(qr&&qr.isScanning)qr.pause(true)}catch(e){}
+ }
+ if(navigator.vibrate)navigator.vibrate(80);
+ document.getElementById("nextBtn").style.display="none";
+ setResult("info","Checking "+esc(code)+"...");
+ const cb="ogc_"+Date.now()+"_"+Math.floor(Math.random()*100000);
+ const tag=document.createElement("script");
+ let timer=setTimeout(()=>finishError("Attendance server did not respond."),15000);
+ function cleanup(){clearTimeout(timer);try{delete window[cb]}catch(e){}if(tag.parentNode)tag.remove()}
+ function finishError(m){cleanup();busy=false;setResult("error","<b>CONNECTION ERROR</b><br>"+esc(m))}
+ window[cb]=data=>{cleanup();displayResult(data||{ok:false,message:"Invalid server response."})};
+ tag.onerror=()=>finishError("Could not connect to the Apps Script attendance server.");
+ const p=new URLSearchParams({action:"checkin",code:code,device:"External QR Scanner",
+callback:cb});
+ tag.src=API_URL+"?"+p.toString();document.body.appendChild(tag);
 }
 
-
-/* =========================================================
-   OPEN CAMERA
-   ========================================================= */
-
-async function openCamera() {
-
-  try {
-
-    /*
-    Stop previous scanner.
-    */
-
-    if (qr) {
-
-      try {
-
-        if (qr.isScanning) {
-
-          await qr.stop();
-
-        }
-
-      }
-      catch (e) {}
-
-
-      try {
-
-        qr.clear();
-
-      }
-      catch (e) {}
-
-    }
-
-
-    qr =
-      new Html5Qrcode(
-        "reader"
-      );
-
-
-    const camera =
-      cameras[current];
-
-
-    if (!camera) {
-
-      throw new Error(
-        "Selected camera is unavailable."
-      );
-
-    }
-
-
-    setResult(
-      "info",
-      "Opening " +
-      esc(
-        camera.label ||
-        "camera"
-      ) +
-      "..."
+function displayResult(d){
+ if(d.ok){tone(true);
+   setResult("success","<b>✅ "+esc(d.message)+"</b><div class='name'>"+esc(d.name)+"</div>"+esc(d.id)+"<br>"+esc(d.type||"")+(d.sponsor?"<br>"+esc(d.sponsor):"")+"<br><b>PAYMENT: "+esc(d.payment||"")+"</b><br>Check-in: "+esc(d.time||""));
+ }else if(d.status==="payment_required" || d.status==="unpaid"){
+    tone(false);if(navigator.vibrate)navigator.vibrate([180,80,180]);
+    setResult("unpaid",
+      "<div class='payment-stop'>⛔ NOT CHECKED IN</div>"+
+      "<div class='name'>"+esc(d.name||"")+"</div>"+
+      "<div class='id'>"+esc(d.id||"")+"</div>"+
+      "<div class='payment'>PAYMENT: UNPAID</div>"+
+      "<div class='payment-instruction'>Please proceed to the PAYMENT AREA first.</div>"+
+      "<div style='margin-top:8px'>After payment is confirmed in the Registration sheet, scan the QR code again.</div>"
     );
-
-
-    await qr.start(
-
-      camera.id,
-
-      {
-
-        fps: 12,
-
-        qrbox:
-          (width, height) => {
-
-            const size =
-              Math.floor(
-                Math.min(
-                  width,
-                  height
-                ) * 0.70
-              );
-
-
-            return {
-
-              width: size,
-
-              height: size
-
-            };
-          },
-
-        aspectRatio: 1
-
-      },
-
-
-      /*
-      QR successfully detected.
-      */
-
-      decodedText => {
-
-        checkPlayer(
-          decodedText
-        );
-
-      },
-
-
-      /*
-      Ignore normal scan misses.
-      */
-
-      () => {}
-
-    );
-
-
-    document
-      .getElementById(
-        "startBtn"
-      )
-      .style.display =
-        "none";
-
-
-    document
-      .getElementById(
-        "controls"
-      )
-      .style.display =
-        "block";
-
-
-    setResult(
-      "info",
-      "Camera ready — scan a player QR code."
-    );
-
-  }
-
-  catch (e) {
-
-    cameraError(e);
-
-  }
+  }else if(d.status==="duplicate"){tone(false);
+   setResult("duplicate","<b>⚠️ "+esc(d.message)+"</b><div class='name'>"+esc(d.name)+"</div>"+esc(d.id)+"<br>First check-in: "+esc(d.firstCheckIn||""));
+ }else{
+   tone(false);
+   setResult("error","<b>❌ "+esc(d.message||"CHECK-IN FAILED")+"</b><br>"+esc(d.id||""));
+ }
+ busy=false;
+ const next=document.getElementById("nextBtn");
+ if(qr&&qr.isScanning){ next.style.display="block"; }
+ else { next.style.display="none"; }
+}
+function scanNextPlayer(){
+ lastCode="";lastTime=0;busy=false;
+ document.getElementById("nextBtn").style.display="none";
+ try{
+   if(qr&&qr.isScanning){
+     qr.resume();
+     setResult("info","Camera ready — scan the next player QR code.");
+   }else{
+     setResult("info","Press START CAMERA to scan the next player.");
+   }
+ }catch(e){
+   setResult("error","<b>CAMERA ERROR</b><br>Could not resume camera. Press START CAMERA.");
+   document.getElementById("startBtn").style.display="block";
+ }
 }
 
-
-/* =========================================================
-   SELECT CAMERA
-   ========================================================= */
-
-async function chooseCamera(index) {
-
-  current =
-    Number(index);
-
-  await openCamera();
+function cameraError(e){
+ const n=e?.name||"",m=e?.message||String(e);let help="Press START CAMERA again or use manual check-in.";
+ if(n==="NotAllowedError"||/permission|denied/i.test(m))help="Camera permission was denied for this website. Allow camera access in the browser and try again.";
+ else if(n==="NotFoundError")help="No camera was found.";
+ else if(n==="NotReadableError")help="Another app may be using the camera. Close it and try again.";
+ setResult("error","<b>CAMERA ERROR</b><br>"+esc(help));document.getElementById("debug").textContent="Browser error: "+n+" — "+m;document.getElementById("startBtn").style.display="block";
 }
-
-
-/* =========================================================
-   SWITCH CAMERA
-   ========================================================= */
-
-async function switchCamera() {
-
-  if (
-    cameras.length < 2
-  ) {
-
-    return;
-  }
-
-
-  current =
-    (
-      current + 1
-    ) %
-    cameras.length;
-
-
-  fillCameraList();
-
-  await openCamera();
-}
-
-
-/* =========================================================
-   STOP CAMERA
-   ========================================================= */
-
-async function stopCamera() {
-
-  try {
-
-    if (
-      qr &&
-      qr.isScanning
-    ) {
-
-      await qr.stop();
-
-    }
-
-
-    if (qr) {
-
-      qr.clear();
-
-    }
-
-  }
-
-  catch (e) {}
-
-
-  document
-    .getElementById(
-      "startBtn"
-    )
-    .style.display =
-      "block";
-
-
-  document
-    .getElementById(
-      "controls"
-    )
-    .style.display =
-      "none";
-
-
-  setResult(
-    "info",
-    "Camera stopped."
-  );
-}
-
-
-/* =========================================================
-   MANUAL CHECK-IN
-   ========================================================= */
-
-function manualCheckIn() {
-
-  const input =
-    document.getElementById(
-      "manualCode"
-    );
-
-
-  const value =
-    input.value.trim();
-
-
-  if (!value) {
-
-    setResult(
-      "error",
-      "<b>Enter a Player ID.</b>"
-    );
-
-    return;
-  }
-
-
-  input.value = "";
-
-
-  checkPlayer(value);
-}
-
-
-/* =========================================================
-   CHECK PLAYER
-   ========================================================= */
-
-function checkPlayer(raw) {
-
-  const code =
-    String(
-      raw || ""
-    )
-      .trim()
-      .toUpperCase();
-
-
-  if (!code) {
-
-    return;
-  }
-
-
-  const now =
-    Date.now();
-
-
-  /*
-  Prevent repeated scans.
-  */
-
-  if (
-    busy ||
-    (
-      code === lastCode &&
-      now - lastTime < 3500
-    )
-  ) {
-
-    return;
-  }
-
-
-  /*
-  IMPORTANT:
-  There is NO faulty SETUP REQUIRED check here.
-  */
-
-
-  busy = true;
-
-  lastCode =
-    code;
-
-  lastTime =
-    now;
-
-
-  if (
-    navigator.vibrate
-  ) {
-
-    navigator.vibrate(
-      80
-    );
-
-  }
-
-
-  setResult(
-    "info",
-    "Checking " +
-    esc(code) +
-    "..."
-  );
-
-
-  /*
-  Create unique JSONP callback.
-  */
-
-  const callbackName =
-    "ogc_" +
-    Date.now() +
-    "_" +
-    Math.floor(
-      Math.random() *
-      100000
-    );
-
-
-  const script =
-    document.createElement(
-      "script"
-    );
-
-
-  let timeout =
-    setTimeout(
-      () => {
-
-        finishError(
-          "Attendance server did not respond."
-        );
-
-      },
-
-      15000
-    );
-
-
-  function cleanup() {
-
-    clearTimeout(
-      timeout
-    );
-
-
-    try {
-
-      delete window[
-        callbackName
-      ];
-
-    }
-
-    catch (e) {}
-
-
-    if (
-      script.parentNode
-    ) {
-
-      script.remove();
-
-    }
-  }
-
-
-  function finishError(message) {
-
-    cleanup();
-
-    busy = false;
-
-
-    setResult(
-      "error",
-      "<b>CONNECTION ERROR</b><br>" +
-      esc(message)
-    );
-  }
-
-
-  /*
-  Apps Script response.
-  */
-
-  window[
-    callbackName
-  ] =
-    function(data) {
-
-      cleanup();
-
-
-      displayResult(
-        data || {
-          ok: false,
-          message:
-            "Invalid server response."
-        }
-      );
-
-    };
-
-
-  /*
-  If server cannot be reached.
-  */
-
-  script.onerror =
-    function() {
-
-      finishError(
-        "Could not connect to the Apps Script attendance server."
-      );
-
-    };
-
-
-  /*
-  Build request.
-  */
-
-  const params =
-  new URLSearchParams({
-
-    action:
-      "checkin",
-
-    code:
-      code,
-
-    device:
-      "External QR Scanner",
-
-    callback:
-      callbackName
-
-  });
-
-
-  script.src =
-    API_URL +
-    "?" +
-    params.toString();
-
-
-  document
-    .body
-    .appendChild(
-      script
-    );
-}
-
-
-/* =========================================================
-   DISPLAY CHECK-IN RESULT
-   ========================================================= */
-
-function displayResult(data) {
-
-  /*
-  Successful check-in.
-  */
-
-  if (data.ok) {
-
-    setResult(
-
-      "success",
-
-      "<b>✅ " +
-      esc(data.message) +
-      "</b>" +
-
-      "<div class='name'>" +
-      esc(data.name) +
-      "</div>" +
-
-      esc(data.id) +
-
-      "<br>" +
-
-      esc(
-        data.type || ""
-      ) +
-
-      (
-        data.sponsor
-
-          ? "<br>" +
-            esc(
-              data.sponsor
-            )
-
-          : ""
-      ) +
-
-      "<br><b>PAYMENT: " +
-
-      esc(
-        data.payment || ""
-      ) +
-
-      "</b>" +
-
-      "<br>Check-in: " +
-
-      esc(
-        data.time || ""
-      )
-
-    );
-
-  }
-
-
-  /*
-  Duplicate check-in.
-  */
-
-  else if (
-    data.status ===
-    "duplicate"
-  ) {
-
-    setResult(
-
-      "duplicate",
-
-      "<b>⚠️ " +
-      esc(data.message) +
-      "</b>" +
-
-      "<div class='name'>" +
-      esc(data.name) +
-      "</div>" +
-
-      esc(data.id) +
-
-      "<br>First check-in: " +
-
-      esc(
-        data.firstCheckIn ||
-        ""
-      )
-
-    );
-
-  }
-
-
-  /*
-  Error / player not found.
-  */
-
-  else {
-
-    setResult(
-
-      "error",
-
-      "<b>❌ " +
-
-      esc(
-        data.message ||
-        "CHECK-IN FAILED"
-      ) +
-
-      "</b>" +
-
-      "<br>" +
-
-      esc(
-        data.id ||
-        ""
-      )
-
-    );
-
-  }
-
-
-  /*
-  Allow another scan after delay.
-  */
-
-  setTimeout(
-    () => {
-
-      busy = false;
-
-    },
-
-    2500
-  );
-}
-
-
-/* =========================================================
-   CAMERA ERROR
-   ========================================================= */
-
-function cameraError(error) {
-
-  const name =
-    error?.name ||
-    "";
-
-
-  const message =
-    error?.message ||
-    String(error);
-
-
-  let help =
-    "Press START CAMERA again or use manual check-in.";
-
-
-  if (
-    name ===
-      "NotAllowedError" ||
-    /permission|denied/i
-      .test(message)
-  ) {
-
-    help =
-      "Camera permission was denied for this website. Allow camera access in the browser and try again.";
-
-  }
-
-
-  else if (
-    name ===
-    "NotFoundError"
-  ) {
-
-    help =
-      "No camera was found.";
-
-  }
-
-
-  else if (
-    name ===
-    "NotReadableError"
-  ) {
-
-    help =
-      "Another app may be using the camera. Close it and try again.";
-
-  }
-
-
-  setResult(
-
-    "error",
-
-    "<b>CAMERA ERROR</b><br>" +
-    esc(help)
-
-  );
-
-
-  document
-    .getElementById(
-      "debug"
-    )
-    .textContent =
-
-      "Browser error: " +
-      name +
-      " — " +
-      message;
-
-
-  document
-    .getElementById(
-      "startBtn"
-    )
-    .style.display =
-      "block";
-}
-
 </script>
-
 </body>
 </html>
